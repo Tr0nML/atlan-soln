@@ -1,0 +1,76 @@
+{
+    "title": "Atlan Heracles API Observability",
+    "description": "Monitor API health, dependencies, and logs",
+    "editable": true,
+    "gnetId": null,
+    "graphTooltip": 1,
+    "links": [],
+    "panels": [
+      {
+        "type": "timeseries",
+        "title": "API Latency (p95)",
+        "datasource": {"type": "prometheus", "uid": "victoriametrics"},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{service=\"heracles\"}[5m])) by (le, endpoint))",
+            "legendFormat": "{{endpoint}}"
+          }
+        ]
+      },
+      {
+        "type": "timeseries",
+        "title": "API Error Rate (%)",
+        "datasource": {"type": "prometheus", "uid": "victoriametrics"},
+        "targets": [
+          {
+            "expr": "(sum(rate(http_requests_total{status=~\"5xx\", service=\"heracles\"}[5m])) / (sum(rate(http_requests_total{service=\"heracles\"}[5m]))) * 100",
+            "legendFormat": "5xx Errors"
+          }
+        ]
+      },
+
+      {
+        "type": "stat",
+        "title": "PostgreSQL Query Latency (ms)",
+        "datasource": {"type": "prometheus", "uid": "victoriametrics"},
+        "targets": [
+          {
+            "expr": "pg_query_duration_seconds{service=\"heracles\"} * 1000",
+            "format": "time_series"
+          }
+        ]
+      },
+
+      {
+        "type": "logs",
+        "title": "Heracles Error Logs",
+        "datasource": {"type": "elasticsearch", "uid": "elasticsearch"},
+        "options": {
+          "showTime": true,
+          "dedupStrategy": "none"
+        },
+        "targets": [
+          {
+            "query": "service:heracles AND level:ERROR",
+            "refId": "A"
+          }
+        ]
+      }
+    ],
+    "templating": {
+      "list": [
+        {
+          "name": "environment",
+          "label": "Environment",
+          "query": "label_values(environment)",
+          "datasource": {"type": "prometheus", "uid": "victoriametrics"}
+        },
+        {
+          "name": "endpoint",
+          "label": "Endpoint",
+          "query": "label_values(http_request_duration_seconds_bucket, endpoint)",
+          "datasource": {"type": "prometheus", "uid": "victoriametrics"}
+        }
+      ]
+    }
+  }

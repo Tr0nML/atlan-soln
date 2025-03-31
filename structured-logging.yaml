@@ -1,0 +1,5 @@
+logging:
+  pattern:
+    level: "%5p [trace_id=%X{trace_id}]"
+  file:
+    name: /var/log/heracles.log
